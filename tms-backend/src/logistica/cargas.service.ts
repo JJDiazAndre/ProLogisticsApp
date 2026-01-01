@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Carga } from './entities/carga.entity';
@@ -43,10 +43,13 @@ export class CargasService {
 
   async tomarCarga(cargaId: number, empresaId: number) {
     const carga = await this.cargasRepo.findOneBy({ id: cargaId });
-    if (carga.status !== 'APROBADA') throw new Error('Carga no disponible');
+    
+    // Validación crítica para evitar errores de tipo
+    if (!carga) throw new NotFoundException('Carga no encontrada');
 
     carga.status = 'ASIGNADA';
     carga.empresaAsignada = { id: empresaId } as any;
+
     return await this.cargasRepo.save(carga);
   }
 

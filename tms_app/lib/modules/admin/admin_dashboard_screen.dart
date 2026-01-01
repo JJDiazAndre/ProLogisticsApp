@@ -103,43 +103,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       const SizedBox(height: 20),
                       Expanded(
                         child: SingleChildScrollView(
-                          child: DataTable(
-                            // En las columnas:
+                          child: 
+                          // Dentro del DataTable en el FutureBuilder:
+                          DataTable(
                             columns: const [
                               DataColumn(label: Text('ID')),
                               DataColumn(label: Text('Origen')),
                               DataColumn(label: Text('Destino')),
                               DataColumn(label: Text('Estado')),
-                              DataColumn(label: Text('Acciones')), // Nueva columna
+                              DataColumn(label: Text('Acciones')), // 5 columnas en total
                             ],
-
-                            // En las filas (rows):
                             rows: listaCargas.map((item) => DataRow(cells: [
                               DataCell(Text(item['id'].toString())),
-                              DataCell(Text(item['origen'])),
-                              DataCell(Text(item['destino'])),
-                              DataCell(Chip(
-                                label: Text(item['status']),
-                                backgroundColor: item['status'] == 'PENDIENTE' ? Colors.orange[100] : Colors.green[100],
-                              )),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.check, color: Colors.green),
-                                      tooltip: 'Aprobar',
-                                      onPressed: () => cambiarEstadoCarga(item['id'], 'APROBADA'),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.cancel, color: Colors.red),
-                                      tooltip: 'Rechazar',
-                                      onPressed: () => cambiarEstadoCarga(item['id'], 'CANCELADA'),
-                                    ),
-                                  ],
+                              DataCell(Text(item['origen'] ?? '')),
+                              DataCell(Text(item['destino'] ?? '')),
+                              DataCell(Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: item['status'] == 'PENDIENTE' ? Colors.orange[100] : Colors.green[100],
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              ),
+                                child: Text(item['status'] ?? 'PENDIENTE'),
+                              )),
+                              DataCell(Row( // Quinta celda con acciones para la demo
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    onPressed: () => cambiarEstadoCarga(item['id'], 'APROBADA'),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () => cambiarEstadoCarga(item['id'], 'CANCELADA'),
+                                  ),
+                                ],
+                              )),
                             ])).toList(),
-                          ),
+                          )
                         ),
                       ),
                     ],

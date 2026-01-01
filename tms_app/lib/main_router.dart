@@ -3,6 +3,7 @@ import 'package:tms_app/core/models/user_model.dart';
 import 'package:tms_app/modules/admin/admin_dashboard_screen.dart';
 import 'package:tms_app/modules/client/request_cargo_screen.dart';
 import 'package:tms_app/modules/dispatcher/dispatcher_dashboard_screen.dart';
+import 'package:tms_app/modules/driver/driver_home_screen.dart';
 
 class MainRouter extends StatelessWidget {
   final UserProfile user;
@@ -21,7 +22,7 @@ class MainRouter extends StatelessWidget {
       case UserRole.DESPACHADOR:
         return const DispatcherDashboardScreen();
       case UserRole.OPERADOR:
-        return const Scaffold(body: Center(child: Text("Vista de Chofer")));
+        return DriverHomeScreen();
       default:
         return const Scaffold(body: Center(child: Text("Rol no definido")));
     }
