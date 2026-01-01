@@ -14,19 +14,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() async {
     final api = ApiService();
-    final user = await api.login(
-      _emailController.text, 
-      _passController.text, 
-      _selectedRole
-    );
+    // El login ya no necesita el rol como parámetro, el servidor nos dirá cuáles tiene
+    final user = await api.login(_emailController.text, _passController.text);
 
     if (user != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => MainRouter(user: user)),
-      );
+      // Si solo tiene un rol, entra directo. Si tiene varios, va al selector.
+      if (user.roles.length == 1) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => MainRouter(user: user, activeRole: user.roles[0])),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => RoleSelectorScreen(user: user)),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al conectar con la API")),
+        const SnackBar(content: Text("Login Fallido")),
       );
     }
   }

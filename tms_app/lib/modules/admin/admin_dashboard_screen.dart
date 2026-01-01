@@ -34,6 +34,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> cambiarEstadoCarga(int id, String nuevoEstado) async {
+    final url = Uri.parse('http://localhost:3000/api/cargas/$id/status');
+    try {
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'status': nuevoEstado}),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {}); // Refresca la tabla automáticamente
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Carga $id actualizada a $nuevoEstado')),
+        );
+      }
+    } catch (e) {
+      print("Error al actualizar: $e");
+    }
+  }
+
   // 2. Modifica el 'body' de tu Scaffold
   @override
   Widget build(BuildContext context) {
@@ -84,19 +104,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Expanded(
                         child: SingleChildScrollView(
                           child: DataTable(
+                            // En las columnas:
                             columns: const [
                               DataColumn(label: Text('ID')),
                               DataColumn(label: Text('Origen')),
                               DataColumn(label: Text('Destino')),
-                              DataColumn(label: Text('Peso (T)')),
                               DataColumn(label: Text('Estado')),
+                              DataColumn(label: Text('Acciones')), // Nueva columna
                             ],
+
+                            // En las filas (rows):
                             rows: listaCargas.map((item) => DataRow(cells: [
                               DataCell(Text(item['id'].toString())),
                               DataCell(Text(item['origen'])),
                               DataCell(Text(item['destino'])),
-                              DataCell(Text(item['peso'].toString())),
-                              DataCell(Chip(label: Text(item['status']))),
+                              DataCell(Chip(
+                                label: Text(item['status']),
+                                backgroundColor: item['status'] == 'PENDIENTE' ? Colors.orange[100] : Colors.green[100],
+                              )),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.check, color: Colors.green),
+                                      tooltip: 'Aprobar',
+                                      onPressed: () => cambiarEstadoCarga(item['id'], 'APROBADA'),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.cancel, color: Colors.red),
+                                      tooltip: 'Rechazar',
+                                      onPressed: () => cambiarEstadoCarga(item['id'], 'CANCELADA'),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ])).toList(),
                           ),
                         ),

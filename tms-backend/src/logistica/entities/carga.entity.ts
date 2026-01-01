@@ -26,4 +26,7 @@ export class Carga {
 
   @ManyToOne(() => User, (user) => user.id)
   cliente: User;
+
+  @ManyToOne(() => User, { nullable: true })
+  empresaAsignada: User; // Quién se llevará la carga
 }

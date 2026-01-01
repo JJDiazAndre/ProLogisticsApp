@@ -1,4 +1,3 @@
-// src/auth/auth.service.ts actualizado para buscar en DB real
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,12 +16,17 @@ export class AuthService {
     const user = await this.usersRepository.findOneBy({ email });
     
     if (user && user.password === pass) {
-      const payload = { sub: user.id, email: user.email, role: user.role };
+      // El payload ahora lleva el arreglo completo de roles
+      const payload = { sub: user.id, email: user.email, roles: user.roles };
       return {
         access_token: this.jwtService.sign(payload),
-        user: { email: user.email, role: user.role }
+        user: { 
+          id: user.id,
+          email: user.email, 
+          roles: user.roles // Devolvemos la lista de roles al frontend
+        }
       };
     }
-    throw new UnauthorizedException('Credenciales incorrectas');
+    throw new UnauthorizedException('Credenciales inválidas');
   }
 }

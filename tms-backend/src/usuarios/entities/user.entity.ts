@@ -18,6 +18,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENTE })
-  role: UserRole;
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    array: true, // Habilita el soporte de arreglos en Postgres
+    default: [UserRole.CLIENTE],
+  })
+  roles: UserRole[];
 }

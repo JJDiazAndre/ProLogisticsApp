@@ -25,4 +25,29 @@ export class CargasService {
   async obtenerTodas() {
     return await this.cargasRepo.find({ relations: ['cliente'] });
   }
+
+  async actualizarEstado(id: number, nuevoEstado: string) {
+    const carga = await this.cargasRepo.findOneBy({ id });
+    if (!carga) throw new Error('Carga no encontrada');
+    
+    carga.status = nuevoEstado;
+    return await this.cargasRepo.save(carga);
+  }
+
+  async obtenerDisponibles() {
+    return await this.cargasRepo.find({
+      where: { status: 'APROBADA' },
+      relations: ['cliente']
+    });
+  }
+
+  async tomarCarga(cargaId: number, empresaId: number) {
+    const carga = await this.cargasRepo.findOneBy({ id: cargaId });
+    if (carga.status !== 'APROBADA') throw new Error('Carga no disponible');
+
+    carga.status = 'ASIGNADA';
+    carga.empresaAsignada = { id: empresaId } as any;
+    return await this.cargasRepo.save(carga);
+  }
+
 }

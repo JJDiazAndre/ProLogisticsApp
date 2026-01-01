@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
 import { CargasService } from './cargas.service';
 
 @Controller('cargas')
@@ -16,4 +16,18 @@ export class CargasController {
   async listar() {
     return this.cargasService.obtenerTodas();
   }
+
+  @Patch(':id/status')
+  async actualizarEstado(
+    @Param('id') id: number,
+    @Body('status') status: string
+  ) {
+    return this.cargasService.actualizarEstado(id, status);
+  }
+
+  @Get('disponibles')
+  async listarDisponibles() {
+    return this.cargasService.obtenerDisponibles();
+  }
+
 }
