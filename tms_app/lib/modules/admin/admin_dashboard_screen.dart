@@ -1,154 +1,160 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import '../../core/models/user_model.dart';
 import '../../core/services/api_service.dart';
+import '../../shared/widgets/app_drawer.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
+  final UserProfile user;
+
+  const AdminDashboardScreen({super.key, required this.user});
+
   @override
   _AdminDashboardScreenState createState() => _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  // Lista ficticia para la UI inicial, luego la traeremos de la API
-  List<Map<String, dynamic>> empresas = [
-    {"id": 1, "nombre": "Transportes Rápidos S.A.", "status": "Pendiente"},
-    {"id": 2, "nombre": "Logística Global", "status": "Verificado"},
-  ];
+  // El servicio ahora es un Singleton, lo llamamos directamente
+  final ApiService _apiService = ApiService();
 
-  Future<List<dynamic>> fetchCargas() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/api/cargas'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return [];
-  }
-
-  // 1. Agrega este método dentro de la clase _AdminDashboardScreenState
-  Future<List<dynamic>> getCargas() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/api/cargas'));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Error al cargar datos');
-    }
-  }
-
-  Future<void> cambiarEstadoCarga(int id, String nuevoEstado) async {
-    final url = Uri.parse('http://localhost:3000/api/cargas/$id/status');
-    try {
-      final response = await http.patch(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'status': nuevoEstado}),
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {}); // Refresca la tabla automáticamente
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Carga $id actualizada a $nuevoEstado')),
-        );
-      }
-    } catch (e) {
-      print("Error al actualizar: $e");
-    }
-  }
-
-  // 2. Modifica el 'body' de tu Scaffold
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          // ... (Tu NavigationRail anterior se queda igual)
-          Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: getCargas(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No hay cargas registradas"));
-                }
+      appBar: AppBar(
+        title: const Text("Panel de Administración"),
+        elevation: 2,
+      ),
+      // Inyectamos el menú lateral que permite cambiar de rol o cerrar sesión
+      drawer: AppDrawer(user: widget.user),
+      body: FutureBuilder<List<dynamic>>(
+        // Usamos el nuevo método centralizado en ApiService
+        future: _apiService.getCargas(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                  const SizedBox(height: 16),
+                  Text("Error al conectar con el servidor: ${snapshot.error}"),
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text("Reintentar"),
+                  )
+                ],
+              ),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("No hay cargas registradas en el sistema."));
+          }
 
-                final listaCargas = snapshot.data!;
+          final listaCargas = snapshot.data!;
 
-                return Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- NUEVO BLOQUE CON TÍTULO Y BOTÓN ---
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Cargas Pendientes de Asignación",
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.blue),
-                            tooltip: "Actualizar datos",
-                            onPressed: () {
-                              setState(() {
-                                // Al llamar a setState vacío, Flutter vuelve a ejecutar 
-                                // el FutureBuilder y pide los datos a la API de nuevo.
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: 
-                          // Dentro del DataTable en el FutureBuilder:
-                          DataTable(
-                            columns: const [
-                              DataColumn(label: Text('ID')),
-                              DataColumn(label: Text('Origen')),
-                              DataColumn(label: Text('Destino')),
-                              DataColumn(label: Text('Estado')),
-                              DataColumn(label: Text('Acciones')), // 5 columnas en total
-                            ],
-                            rows: listaCargas.map((item) => DataRow(cells: [
+          return Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Gestión de Cargas",
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.blue),
+                      tooltip: "Actualizar lista",
+                      onPressed: () => setState(() {}),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: DataTable(
+                          headingRowColor: MaterialStateProperty.all(Colors.grey[200]),
+                          columns: const [
+                            DataColumn(label: Text('ID')),
+                            DataColumn(label: Text('Origen')),
+                            DataColumn(label: Text('Destino')),
+                            DataColumn(label: Text('Estado')),
+                            DataColumn(label: Text('Acciones')),
+                          ],
+                          rows: listaCargas.map((item) {
+                            return DataRow(cells: [
                               DataCell(Text(item['id'].toString())),
-                              DataCell(Text(item['origen'] ?? '')),
-                              DataCell(Text(item['destino'] ?? '')),
-                              DataCell(Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: item['status'] == 'PENDIENTE' ? Colors.orange[100] : Colors.green[100],
-                                  borderRadius: BorderRadius.circular(10),
+                              DataCell(Text(item['origen'] ?? 'N/A')),
+                              DataCell(Text(item['destino'] ?? 'N/A')),
+                              DataCell(_buildStatusChip(item['status'])),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    if (item['status'] == 'PENDIENTE') ...[
+                                      IconButton(
+                                        icon: const Icon(Icons.check_circle, color: Colors.green),
+                                        tooltip: "Aprobar",
+                                        onPressed: () => _updateStatus(item['id'], 'APROBADA'),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.cancel, color: Colors.red),
+                                        tooltip: "Rechazar",
+                                        onPressed: () => _updateStatus(item['id'], 'CANCELADA'),
+                                      ),
+                                    ] else 
+                                      const Text("-", style: TextStyle(color: Colors.grey)),
+                                  ],
                                 ),
-                                child: Text(item['status'] ?? 'PENDIENTE'),
-                              )),
-                              DataCell(Row( // Quinta celda con acciones para la demo
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.check, color: Colors.green),
-                                    onPressed: () => cambiarEstadoCarga(item['id'], 'APROBADA'),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close, color: Colors.red),
-                                    onPressed: () => cambiarEstadoCarga(item['id'], 'CANCELADA'),
-                                  ),
-                                ],
-                              )),
-                            ])).toList(),
-                          )
+                              ),
+                            ]);
+                          }).toList(),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
+  }
+
+  // Widget auxiliar para los estados
+  Widget _buildStatusChip(String? status) {
+    Color color = Colors.grey;
+    if (status == 'PENDIENTE') color = Colors.orange;
+    if (status == 'APROBADA') color = Colors.green;
+    if (status == 'CANCELADA') color = Colors.red;
+    if (status == 'ASIGNADA') color = Colors.blue;
+
+    return Chip(
+      label: Text(
+        status ?? 'DESCONOCIDO',
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+      backgroundColor: color,
+    );
+  }
+
+  // Método para actualizar estado usando el nuevo ApiService
+  Future<void> _updateStatus(int id, String nuevoEstado) async {
+    final success = await _apiService.actualizarEstadoCarga(id, nuevoEstado);
+    if (success) {
+      setState(() {}); // Refrescamos la UI
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Carga #$id actualizada a $nuevoEstado')),
+        );
+      }
+    }
   }
 }

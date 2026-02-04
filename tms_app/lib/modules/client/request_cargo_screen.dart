@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:tms_app/core/models/user_model.dart';
+import 'package:tms_app/shared/widgets/app_drawer.dart';
+
 class RequestCargoScreen extends StatefulWidget {
-  const RequestCargoScreen({super.key});
+  final UserProfile user;
+  const RequestCargoScreen({super.key, required this.user});
 
   @override
   State<RequestCargoScreen> createState() => _RequestCargoScreenState();
@@ -60,6 +64,7 @@ class _RequestCargoScreenState extends State<RequestCargoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Solicitar Transporte de Carga")),
+      drawer: AppDrawer(user: widget.user),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

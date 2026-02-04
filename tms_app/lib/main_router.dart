@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tms_app/core/models/user_model.dart';
+// Importa tus pantallas
 import 'package:tms_app/modules/admin/admin_dashboard_screen.dart';
 import 'package:tms_app/modules/client/request_cargo_screen.dart';
 import 'package:tms_app/modules/dispatcher/dispatcher_dashboard_screen.dart';
@@ -7,24 +8,26 @@ import 'package:tms_app/modules/driver/driver_home_screen.dart';
 
 class MainRouter extends StatelessWidget {
   final UserProfile user;
-  final UserRole activeRole; // El rol que el usuario eligió al entrar
+  final UserRole activeRole;
 
   const MainRouter({Key? key, required this.user, required this.activeRole}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Retornamos la vista según el rol ACTIVO
+    // Pasamos 'user' a cada pantalla para que puedan dibujar el Drawer
     switch (activeRole) {
       case UserRole.ADMIN:
-        return AdminDashboardScreen();
+        return AdminDashboardScreen(user: user);
       case UserRole.CLIENTE:
-        return const RequestCargoScreen();
+        return RequestCargoScreen(user: user);
       case UserRole.DESPACHADOR:
-        return const DispatcherDashboardScreen();
+        return DispatcherDashboardScreen(user: user);
       case UserRole.OPERADOR:
-        return DriverHomeScreen();
+        return DriverHomeScreen(user: user);
       default:
-        return const Scaffold(body: Center(child: Text("Rol no definido")));
+        return Scaffold(
+          body: Center(child: Text("Rol ${activeRole.name} no implementado")),
+        );
     }
   }
 }

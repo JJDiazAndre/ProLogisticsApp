@@ -1,16 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../core/models/user_model.dart';
+import '../../shared/widgets/app_drawer.dart';
 
 class DispatcherDashboardScreen extends StatefulWidget {
-  const DispatcherDashboardScreen({super.key});
+  final UserProfile user;
+  const DispatcherDashboardScreen({super.key, required this.user});
 
   @override
   State<DispatcherDashboardScreen> createState() => _DispatcherDashboardScreenState();
 }
 
 class _DispatcherDashboardScreenState extends State<DispatcherDashboardScreen> {
-  
+  // ... (Tu método getCargasDisponibles se mantiene igual)
   Future<List<dynamic>> getCargasDisponibles() async {
     final url = Uri.parse('http://localhost:3000/api/cargas/disponibles');
     final response = await http.get(url);
@@ -24,11 +27,12 @@ class _DispatcherDashboardScreenState extends State<DispatcherDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Bolsa de Cargas Disponibles"),
+        title: const Text("Bolsa de Cargas"),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: () => setState(() {})),
         ],
       ),
+      drawer: AppDrawer(user: widget.user), // Drawer agregado
       body: FutureBuilder<List<dynamic>>(
         future: getCargasDisponibles(),
         builder: (context, snapshot) {
@@ -49,7 +53,7 @@ class _DispatcherDashboardScreenState extends State<DispatcherDashboardScreen> {
                   subtitle: Text("Peso: ${carga['peso']}T - Tipo: ${carga['tipoCarga']}"),
                   trailing: ElevatedButton(
                     onPressed: () {
-                      // Próximo paso: Lógica para "Postularse" o "Tomar Carga"
+                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Funcionalidad de Asignar en desarrollo")));
                     },
                     child: const Text("Tomar Carga"),
                   ),
