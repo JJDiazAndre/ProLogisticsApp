@@ -53,4 +53,19 @@ export class CargasService {
     return await this.cargasRepo.save(carga);
   }
 
+  async asignarChofer(cargaId: number, choferId: number) {
+    const carga = await this.cargasRepo.findOneBy({ id: cargaId });
+    if (!carga) throw new Error('Carga no encontrada');
+    
+    // Validamos que la carga esté lista para asignarse
+    if (carga.status !== 'APROBADA' && carga.status !== 'PENDIENTE') {
+      throw new Error('La carga debe estar APROBADA para asignarse');
+    }
+
+    carga.chofer = { id: choferId } as any;
+    carga.status = 'ASIGNADA';
+    
+    return await this.cargasRepo.save(carga);
+  }
+
 }

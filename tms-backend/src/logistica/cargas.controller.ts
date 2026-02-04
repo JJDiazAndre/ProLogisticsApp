@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Patch, Param } from '@nestjs/common';
 import { CargasService } from './cargas.service';
+import { UpdateStatusDto } from './dto/update-status.dto';
 
 @Controller('cargas')
 export class CargasController {
@@ -20,14 +21,22 @@ export class CargasController {
   @Patch(':id/status')
   async actualizarEstado(
     @Param('id') id: number,
-    @Body('status') status: string
+    @Body() updateStatusDto: UpdateStatusDto, // Usamos el DTO
   ) {
-    return this.cargasService.actualizarEstado(id, status);
+    return this.cargasService.actualizarEstado(id, updateStatusDto.status);
   }
 
   @Get('disponibles')
   async listarDisponibles() {
     return this.cargasService.obtenerDisponibles();
+  }
+
+  @Patch(':id/asignar')
+  async asignar(
+    @Param('id') id: number,
+    @Body('choferId') choferId: number
+  ) {
+    return this.cargasService.asignarChofer(id, choferId);
   }
 
 }

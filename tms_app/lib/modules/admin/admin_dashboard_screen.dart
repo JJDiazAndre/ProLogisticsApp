@@ -97,6 +97,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               DataCell(
                                 Row(
                                   children: [
+                                    // Si está pendiente, mostramos Aprobar/Rechazar
                                     if (item['status'] == 'PENDIENTE') ...[
                                       IconButton(
                                         icon: const Icon(Icons.check_circle, color: Colors.green),
@@ -105,11 +106,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.cancel, color: Colors.red),
-                                        tooltip: "Rechazar",
                                         onPressed: () => _updateStatus(item['id'], 'CANCELADA'),
                                       ),
-                                    ] else 
-                                      const Text("-", style: TextStyle(color: Colors.grey)),
+                                    ],
+                                    // Si ya está aprobada, mostramos el botón de Asignar
+                                    if (item['status'] == 'APROBADA')
+                                      ElevatedButton.icon(
+                                        icon: const Icon(Icons.local_shipping, size: 16),
+                                        label: const Text("Asignar"),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blue,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () => _mostrarDialogoAsignacion(item['id']),
+                                      ),
+                                    
+                                    // Si ya está asignada, mostramos info
+                                    if (item['status'] == 'ASIGNADA')
+                                      const Text("En ruta", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),
@@ -156,5 +170,55 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       }
     }
+  }
+
+  void _mostrarDialogoAsignacion(int cargaId) async {
+    // 1. Cargamos los choferes disponibles
+    final choferes = await _apiService.getChoferes();
+    
+    if (!mounted) return;
+
+    if (choferes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No hay choferes registrados (Rol: OPERADOR)")),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Asignar Chofer"),
+          content: SizedBox(
+            width: 300,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: choferes.length,
+              itemBuilder: (context, index) {
+                final chofer = choferes[index];
+                return ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(chofer['email']),
+                  subtitle: const Text("Disponible"),
+                  onTap: () async {
+                    Navigator.pop(context); // Cerrar diálogo
+                    
+                    // Llamar a la API
+                    final success = await _apiService.asignarChofer(cargaId, chofer['id']);
+                    if (success) {
+                      setState(() {}); // Refrescar tabla
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("¡Chofer asignado correctamente!")),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 }

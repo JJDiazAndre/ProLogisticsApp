@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from '../../usuarios/entities/user.entity';
 
 @Entity()
@@ -12,21 +12,21 @@ export class Carga {
   @Column()
   destino: string;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal')
   peso: number;
 
   @Column()
   tipoCarga: string;
 
   @Column({ default: 'PENDIENTE' })
-  status: string; // PENDIENTE, ASIGNADA, EN_RINTA, ENTREGADA
+  status: string; // PENDIENTE, APROBADA, ASIGNADA, EN_RUTA, ENTREGADA
 
   @CreateDateColumn()
   fechaSolicitud: Date;
 
-  @ManyToOne(() => User, (user) => user.id)
+  @ManyToOne(() => User, (user) => user.cargas, { eager: true }) // eager: true trae los datos del cliente siempre
   cliente: User;
 
-  @ManyToOne(() => User, { nullable: true })
-  empresaAsignada: User; // Quién se llevará la carga
+  @ManyToOne(() => User, { nullable: true, eager: true }) // eager: true trae los datos del chofer
+  chofer: User; // <-- NUEVA RELACIÓN
 }
